@@ -51,13 +51,18 @@ fpaste
 
 # openstack packages
 libvirt-daemon
+virt-viewer
+novnc
 openstack-nova
+openstack-nova-novncproxy
 openstack-swift
+openstack-swift-doc
 openstack-swift-proxy
 openstack-swift-account
 openstack-swift-container
 openstack-swift-object
 openstack-cinder
+openstack-glance
 openstack-utils
 openstack-dashboard
 openstack-quantum
@@ -66,6 +71,11 @@ openstack-quantum-linuxbridge
 openstack-quantum-openvswitch
 python-cinder 
 python-cinderclient
+python-glance
+python-nova
+python-keystone
+python-passlib
+openstack-keystone
 openstack-packstack
 mysql-server
 qpid-cpp-server-daemon
@@ -75,7 +85,11 @@ nbd
 sudo
 avahi
 virt-what
+virt-manager
+virt-viewer
 openssh-server
+spice-gtk
+gtk-vnc-python
 %end
 
 %post
@@ -302,7 +316,9 @@ setenforce permissive
 
 systemctl start sshd.service
 # add a keyfile for install
-ssh-keygen -f /root/keyfile -N ""
+ssh-keygen -f /root/.ssh/id_rsa -N ""
+cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+chmod 600 /root/.ssh/id_rsa.pub
 cat > /root/packstack-answer-file << EOP
 [general]
 CONFIG_DEBUG=n
@@ -312,7 +328,7 @@ CONFIG_NOVA_INSTALL=y
 CONFIG_HORIZON_INSTALL=y
 CONFIG_SWIFT_INSTALL=n
 CONFIG_CLIENT_INSTALL=y
-CONFIG_SSH_KEY=/root/keyfile
+CONFIG_SSH_KEY=/root/.ssh/id_rsa
 CONFIG_MYSQL_HOST=127.0.0.1
 CONFIG_MYSQL_USER=root
 CONFIG_MYSQL_PW=
@@ -346,9 +362,34 @@ CONFIG_USE_EPEL=n
 
 EOP
 
+systemctl start mysqld.service
 packstack --answer-file=/root/packstack-answer-file
-rm -f /root/keyfile
-rm -f /root/keyfile.pub
+#rm -f /root/keyfile
+#rm -f /root/keyfile.pub
+
+# fire up openstack services
+systemctl start openstack-cinder-api.service
+systemctl start openstack-cinder-scheduler.service
+systemctl start openstack-cinder-volume.service
+systemctl start openstack-glance-api.service
+systemctl start openstack-glance-registry.service
+systemctl start openstack-glance-registry.service
+systemctl start openstack-keystone.service
+systemctl start openstack-nova-api.service
+systemctl start openstack-nova-cert.service
+systemctl start openstack-nova-compute.service
+systemctl start openstack-nova-consoleauth.service
+systemctl start openstack-nova-console.service
+systemctl start openstack-nova-metadata-api.service
+systemctl start openstack-nova-scheduler.service
+systemctl start openstack-nova-xvpvncproxy.service
+systemctl start openstack-swift-account.service
+systemctl start "openstack-swift-account@.service"
+systemctl start openstack-swift-container.service
+systemctl start "openstack-swift-container@.service"
+systemctl start openstack-swift-object.service
+systemctl start "openstack-swift-object@.service"
+systemctl start openstack-swift-proxy.service
 
 EOF
 

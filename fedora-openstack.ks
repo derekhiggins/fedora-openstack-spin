@@ -8,7 +8,7 @@
 # - Matthias Runge <mrunge@fedoraproject.org>
 
 lang en_US.UTF-8
-keyboard us
+keyboard de
 timezone US/Eastern
 auth --useshadow --enablemd5
 # we need to catch selinux errors
@@ -90,6 +90,8 @@ virt-viewer
 openssh-server
 spice-gtk
 gtk-vnc-python
+net-tools
+puppet
 %end
 
 %post
@@ -315,23 +317,23 @@ sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
 setenforce permissive
 
 systemctl start sshd.service
-# add a keyfile for install
-ssh-keygen -f /root/.ssh/id_rsa -N ""
+ssh-keygen -N "" -f /root/.ssh/id_rsa
 cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
-chmod 600 /root/.ssh/id_rsa.pub
+chmod 600 /root/.ssh/authorized_keys
+# packstack answer file
 cat > /root/packstack-answer-file << EOP
 [general]
 CONFIG_DEBUG=n
 CONFIG_GLANCE_INSTALL=y
-CONFIG_CINDER_INSTALL=y
+CONFIG_CINDER_INSTALL=n
 CONFIG_NOVA_INSTALL=y
 CONFIG_HORIZON_INSTALL=y
 CONFIG_SWIFT_INSTALL=n
 CONFIG_CLIENT_INSTALL=y
-CONFIG_SSH_KEY=/root/.ssh/id_rsa
+CONFIG_SSH_KEY=/root/.ssh/id_rsa.pub
 CONFIG_MYSQL_HOST=127.0.0.1
 CONFIG_MYSQL_USER=root
-CONFIG_MYSQL_PW=
+CONFIG_MYSQL_PW=mypwd
 CONFIG_QPID_HOST=127.0.0.1
 CONFIG_KEYSTONE_HOST=127.0.0.1
 CONFIG_KEYSTONE_ADMINTOKEN=0bcf6981416e475398775aee4798a221
@@ -359,18 +361,22 @@ CONFIG_SWIFT_STORAGE_ZONES=1
 CONFIG_SWIFT_STORAGE_REPLICAS=1
 CONFIG_SWIFT_STORAGE_FSTYPE=ext4
 CONFIG_USE_EPEL=n
-
+CONFIG_REPO=
+CONFIG_RH_USERNAME=
+CONFIG_RH_PASSWORD=
 EOP
 
 systemctl start mysqld.service
+mysqladmin password mypwd
+export HOME=/root
 packstack --answer-file=/root/packstack-answer-file
 #rm -f /root/keyfile
 #rm -f /root/keyfile.pub
 
 # fire up openstack services
-systemctl start openstack-cinder-api.service
-systemctl start openstack-cinder-scheduler.service
-systemctl start openstack-cinder-volume.service
+#systemctl start openstack-cinder-api.service
+#systemctl start openstack-cinder-scheduler.service
+#systemctl start openstack-cinder-volume.service
 systemctl start openstack-glance-api.service
 systemctl start openstack-glance-registry.service
 systemctl start openstack-glance-registry.service

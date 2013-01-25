@@ -8,7 +8,7 @@
 # - Matthias Runge <mrunge@fedoraproject.org>
 
 lang en_US.UTF-8
-keyboard de
+keyboard us
 timezone US/Eastern
 auth --useshadow --enablemd5
 # we need to catch selinux errors
@@ -20,11 +20,12 @@ part /var/lib/libvirt --size 12288 --fstype ext4
 services --enabled=NetworkManager --disabled=network,sshd
 
 #repo --name=rawhide --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
-repo --name=fedora --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
-repo --name=updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
-repo --name=updates-testing --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-testing-f$releasever&arch=$basearch
-#repo --name=euler --baseurl=http://euler/fedora/development
-#repo --name=euler-testing --baseurl=http://euler/fedora/updates
+#repo --name=fedora --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
+#repo --name=updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
+#repo --name=updates-testing --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-testing-f$releasever&arch=$basearch
+repo --name=euler --baseurl=http://euler/fedora/releases
+repo --name=euler-testing --baseurl=http://euler/fedora/updates/testing
+repo --name=euler-updates --baseurl=http://euler/fedora/updates/18
 %packages
 @base-x
 @base
@@ -323,7 +324,7 @@ chmod 600 /root/.ssh/authorized_keys
 # packstack answer file
 cat > /root/packstack-answer-file << EOP
 [general]
-CONFIG_DEBUG=n
+CONFIG_DEBUG=y
 CONFIG_GLANCE_INSTALL=y
 CONFIG_CINDER_INSTALL=n
 CONFIG_NOVA_INSTALL=y
@@ -366,8 +367,14 @@ CONFIG_RH_USERNAME=
 CONFIG_RH_PASSWORD=
 EOP
 
+cat > /root/.my.cnf << EOM
+[client]
+password="mypwd"
+EOM
+
 systemctl start mysqld.service
 mysqladmin password mypwd
+
 export HOME=/root
 packstack --answer-file=/root/packstack-answer-file
 #rm -f /root/keyfile

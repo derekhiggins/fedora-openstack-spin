@@ -49,50 +49,20 @@ efibootmgr
 
 # fpaste is very useful for debugging and very small
 fpaste
+# tar is a requirment of packstack
+tar
 
 # openstack packages
-libvirt-daemon
-virt-viewer
 novnc
-openstack-nova
-openstack-nova-novncproxy
-openstack-swift
-openstack-swift-doc
-openstack-swift-proxy
-openstack-swift-account
-openstack-swift-container
-openstack-swift-object
-openstack-cinder
-openstack-glance
-openstack-utils
-openstack-dashboard
-openstack-quantum
-openstack-tempo
-openstack-quantum-linuxbridge
-openstack-quantum-openvswitch
-python-cinder 
-python-cinderclient
-python-glance
-python-nova
-python-keystone
 python-passlib
-openstack-keystone
 openstack-packstack
-mysql-server
-qpid-cpp-server-daemon
-qpid-cpp-server
-memcached 
 nbd
 sudo
 avahi
-virt-what
-virt-manager
-virt-viewer
 openssh-server
 spice-gtk
 gtk-vnc-python
 net-tools
-puppet
 %end
 
 %post
@@ -313,8 +283,11 @@ EndSection
 FOE
 fi
 
+hostname openstack
+hostname > /etc/hostname
+
 echo "nbd" > /etc/modules-load.d/nbd.conf
-sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
+sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config 
 setenforce permissive
 
 systemctl start sshd.service
@@ -367,16 +340,8 @@ CONFIG_RH_USERNAME=
 CONFIG_RH_PASSWORD=
 EOP
 
-cat > /root/.my.cnf << EOM
-[client]
-password="mypwd"
-EOM
-
-systemctl start mysqld.service
-mysqladmin password mypwd
-
 export HOME=/root
-packstack --answer-file=/root/packstack-answer-file
+packstack --answer-file=/root/packstack-answer-file > /root/ps.log 2> /root/ps2.log
 #rm -f /root/keyfile
 #rm -f /root/keyfile.pub
 
